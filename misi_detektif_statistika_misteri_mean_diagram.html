@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Misi Detektif Statistika: Misteri Mean & Diagram Data Berkelompok</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <!-- Google Fonts: Inter & Space Grotesk -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&family=Space+Grotesk:wght@600;700;800&family=Fira+Code:wght@500;700&display=swap" rel="stylesheet">
+  
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            display: ['Space Grotesk', 'sans-serif'],
+            mono: ['Fira Code', 'monospace']
+          },
+          colors: {
+            detective: {
+              navy: '#0f172a',
+              card: '#1e293b',
+              gold: '#f59e0b',
+              accent: '#38bdf8',
+              emerald: '#10b981',
+              rose: '#f43f5e'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Styling Proyektor Friendly */
+    .proyektor-shadow {
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.4), 0 8px 10px -6px rgba(0, 0, 0, 0.3);
+    }
+    .math-font {
+      font-family: 'Cambria Math', 'Times New Roman', serif;
+    }
+    /* Animasi pulsa untuk kartu aktif */
+    @keyframes pulse-border {
+      0%, 100% { border-color: rgba(245, 158, 11, 0.9); box-shadow: 0 0 15px rgba(245, 158, 11, 0.4); }
+      50% { border-color: rgba(56, 189, 248, 0.9); box-shadow: 0 0 15px rgba(56, 189, 248, 0.4); }
+    }
+    .active-team-glow {
+      animation: pulse-border 2.5s infinite;
+    }
+    /* Mencegah seleksi saat corat-coret */
+    .no-select {
+      user-select: none;
+      -webkit-user-select: none;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-sans selection:bg-amber-400 selection:text-slate-900">
+
+  <!-- TOP HEADER & CONTROLLER (PROJECTOR-OPTIMIZED) -->
+  <header class="bg-slate-900/90 border-b border-slate-800 sticky top-0 z-40 backdrop-blur-md">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+      <!-- Game Branding -->
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl bg-gradient-to-tr from-amber-500 to-yellow-300 flex items-center justify-center text-slate-950 shadow-lg shadow-amber-500/20">
+          <i class="fa-solid fa-magnifying-glass-chart text-xl"></i>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <h1 class="font-display font-extrabold text-lg sm:text-xl tracking-tight text-white">Misi Detektif Statistika</h1>
+            <span class="text-[10px] font-bold bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full uppercase tracking-wider">Fase F / Kelas 12</span>
+          </div>
+          <p class="text-xs text-slate-400 font-medium">Misteri Mean & Diagram Data Berkelompok &bull; Interaktif Kelas</p>
+        </div>
+      </div>
+
+      <!-- Turn & Timer Quick Dashboard -->
+      <div class="flex items-center gap-3 flex-wrap">
+        <!-- Turn Indicator -->
+        <div class="bg-slate-800/90 border border-slate-700 px-3.5 py-1.5 rounded-xl flex items-center gap-2">
+          <i class="fa-solid fa-users text-amber-400 text-sm"></i>
+          <span class="text-xs text-slate-400">Giliran:</span>
+          <span id="activeTeamBadge" class="text-xs font-bold font-display text-amber-300 bg-amber-500/10 px-2 py-0.5 rounded border border-amber-400/30">Kelompok 1 (Alfa)</span>
+        </div>
+
+        <!-- Timer Control -->
+        <div class="bg-slate-800/90 border border-slate-700 px-3 py-1.5 rounded-xl flex items-center gap-2">
+          <i class="fa-solid fa-stopwatch text-sky-400 text-sm"></i>
+          <span id="timerDisplay" class="font-mono font-bold text-sm text-sky-300 w-12 text-center">02:00</span>
+          <button onclick="toggleTimer()" id="btnPlayPauseTimer" title="Jeda / Mulai Timer" class="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center justify-center text-xs transition-colors">
+            <i class="fa-solid fa-pause"></i>
+          </button>
+          <button onclick="resetTimer()" title="Reset Timer" class="w-7 h-7 rounded-lg bg-slate-700 hover:bg-slate-600 text-slate-200 flex items-center justify-center text-xs transition-colors">
+            <i class="fa-solid fa-rotate-right"></i>
+          </button>
+        </div>
+
+        <!-- Quick Action Tools -->
+        <div class="flex items-center gap-1.5">
+          <button onclick="openScratchpad()" class="bg-sky-600 hover:bg-sky-500 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition-all" title="Buka papan tulis digital untuk mencoret rumus">
+            <i class="fa-solid fa-pen-nib"></i> Coret-coret
+          </button>
+          <button onclick="toggleTeacherGuide()" class="bg-slate-800 hover:bg-slate-700 border border-slate-700 text-amber-300 font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 transition-all" title="Bantuan Guru / Kunci Pembahasan">
+            <i class="fa-solid fa-key"></i> Kunci Guru
+          </button>
+          <button onclick="generateNewCase()" class="bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs px-3 py-2 rounded-xl flex items-center gap-1.5 shadow-md transition-all" title="Acak Kasus Baru">
+            <i class="fa-solid fa-shuffle"></i> Kasus Baru
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN WRAPPER -->
+  <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 py-5 space-y-6">
+
+    <!-- TOP SECTION: SCOREBOARD & TEAMS PANEL -->
+    <section class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <!-- Tim Alfa -->
+      <div id="cardTeam0" onclick="selectTurnTeam(0)" class="cursor-pointer bg-slate-900 border-2 rounded-2xl p-3.5 transition-all duration-200 proyektor-shadow border-amber-400 active-team-glow">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-shield-cat"></i> Tim Alfa
+          </span>
+          <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">T-1</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="scoreTeam0" class="text-2xl sm:text-3xl font-display font-extrabold text-white">0</span>
+          <span class="text-xs text-amber-300 font-semibold">Poin</span>
+        </div>
+        <div class="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+          <i class="fa-solid fa-star text-amber-400 text-[10px]"></i> Selesai: <span id="misiTeam0">0/4</span> Misi
+        </div>
+      </div>
+
+      <!-- Tim Beta -->
+      <div id="cardTeam1" onclick="selectTurnTeam(1)" class="cursor-pointer bg-slate-900 border-2 border-slate-800 rounded-2xl p-3.5 hover:border-slate-700 transition-all duration-200 proyektor-shadow">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-sky-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-dragon"></i> Tim Beta
+          </span>
+          <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">T-2</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="scoreTeam1" class="text-2xl sm:text-3xl font-display font-extrabold text-white">0</span>
+          <span class="text-xs text-sky-300 font-semibold">Poin</span>
+        </div>
+        <div class="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+          <i class="fa-solid fa-star text-sky-400 text-[10px]"></i> Selesai: <span id="misiTeam1">0/4</span> Misi
+        </div>
+      </div>
+
+      <!-- Tim Gamma -->
+      <div id="cardTeam2" onclick="selectTurnTeam(2)" class="cursor-pointer bg-slate-900 border-2 border-slate-800 rounded-2xl p-3.5 hover:border-slate-700 transition-all duration-200 proyektor-shadow">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-feather-pointed"></i> Tim Gamma
+          </span>
+          <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">T-3</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="scoreTeam2" class="text-2xl sm:text-3xl font-display font-extrabold text-white">0</span>
+          <span class="text-xs text-emerald-300 font-semibold">Poin</span>
+        </div>
+        <div class="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+          <i class="fa-solid fa-star text-emerald-400 text-[10px]"></i> Selesai: <span id="misiTeam2">0/4</span> Misi
+        </div>
+      </div>
+
+      <!-- Tim Delta -->
+      <div id="cardTeam3" onclick="selectTurnTeam(3)" class="cursor-pointer bg-slate-900 border-2 border-slate-800 rounded-2xl p-3.5 hover:border-slate-700 transition-all duration-200 proyektor-shadow">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-bold text-purple-400 uppercase tracking-wider flex items-center gap-1.5">
+            <i class="fa-solid fa-bolt"></i> Tim Delta
+          </span>
+          <span class="text-[10px] bg-slate-800 text-slate-300 px-1.5 py-0.5 rounded font-mono">T-4</span>
+        </div>
+        <div class="mt-2 flex items-baseline justify-between">
+          <span id="scoreTeam3" class="text-2xl sm:text-3xl font-display font-extrabold text-white">0</span>
+          <span class="text-xs text-purple-300 font-semibold">Poin</span>
+        </div>
+        <div class="mt-1 flex items-center gap-1 text-[11px] text-slate-400">
+          <i class="fa-solid fa-star text-purple-400 text-[10px]"></i> Selesai: <span id="misiTeam3">0/4</span> Misi
+        </div>
+      </div>
+    </section>
+
+    <!-- CASE BRIEF & NAVIGATION LEVEL TABS -->
+    <section class="bg-slate-900 border border-slate-800 rounded-3xl p-5 sm:p-6 proyektor-shadow">
+      <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 pb-5 border-b border-slate-800">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-400/10 text-amber-300 border border-amber-400/30 flex items-center gap-1">
+              <i class="fa-solid fa-folder-open text-xs"></i> BERKAS KASUS AKTIF #<span id="caseCode">DS-12</span>
+            </span>
+            <span id="caseCategory" class="text-xs text-slate-400 font-medium">Data Skor Ujian Matematika 50 Siswa</span>
+          </div>
+          <h2 id="caseTitle" class="text-xl sm:text-2xl font-display font-extrabold text-white tracking-tight">Misteri Rata-rata Nilai Evaluasi Kelas</h2>
+          <p id="caseDescription" class="text-xs sm:text-sm text-slate-400 mt-1 max-w-3xl">
+            Detektif! Pecahkan 4 misi penyelidikan berturut-turut untuk menyusun berkas laporan lengkap. Hitung titik tengah, frekuensi terbobot, temukan mean data kelompok, dan verifikasi bentuk diagramnya!
+          </p>
+        </div>
+
+        <!-- Level Stepper Buttons -->
+        <div class="flex items-center gap-1.5 bg-slate-950 p-1.5 rounded-2xl border border-slate-800 self-start lg:self-auto flex-wrap">
+          <button onclick="goToMission(1)" id="tabMission1" class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md">
+            <span>1</span> Titik Tengah (<span class="math-font">xᵢ</span>)
+          </button>
+          <button onclick="goToMission(2)" id="tabMission2" class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
+            <span>2</span> Frekuensi (<span class="math-font">fᵢ·xᵢ</span>)
+          </button>
+          <button onclick="goToMission(3)" id="tabMission3" class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
+            <span>3</span> Mean (<span class="math-font">x̄</span>)
+          </button>
+          <button onclick="goToMission(4)" id="tabMission4" class="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all text-slate-400 hover:text-white">
+            <span>4</span> Diagram & Ogive
+          </button>
+        </div>
+      </div>
+
+      <!-- MISSION CONTENT WRAPPER -->
+      <div class="mt-6">
+
+        <!-- ==============================================
+             MISSION 1: TEKA-TEKI TITIK TENGAH (x_i)
+             ============================================== -->
+        <div id="viewMission1" class="space-y-4">
+          <div class="bg-amber-500/10 border border-amber-500/30 rounded-2xl p-4 flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-300 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-bullseye text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm sm:text-base">Misi 1: Menentukan Titik Tengah Setiap Kelas Interval</h3>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Ingat rumus titik tengah: <span class="math-font font-bold text-amber-300 text-sm">xᵢ = (Batas Bawah + Batas Atas) / 2</span>. 
+                Masukkan nilai titik tengah yang tepat untuk setiap interval kelas di bawah ini!
+              </p>
+            </div>
+          </div>
+
+          <!-- Table Input M1 -->
+          <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950">
+            <table class="w-full text-center text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-800/80 text-slate-300 border-b border-slate-700 text-xs uppercase tracking-wider font-bold">
+                  <th class="py-3.5 px-4 w-14">Kelas</th>
+                  <th class="py-3.5 px-4">Interval Nilai</th>
+                  <th class="py-3.5 px-4">Batas Bawah (BB)</th>
+                  <th class="py-3.5 px-4">Batas Atas (BA)</th>
+                  <th class="py-3.5 px-4">Frekuensi (<span class="math-font">fᵢ</span>)</th>
+                  <th class="py-3.5 px-4 bg-amber-500/10 text-amber-300">Tebakan Titik Tengah (<span class="math-font">xᵢ</span>)</th>
+                  <th class="py-3.5 px-4 w-28">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tableBodyM1" class="divide-y divide-slate-800 font-mono">
+                <!-- Injected via JavaScript -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Mission Action Bar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button onclick="checkMission1()" class="bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-slate-950 font-display font-extrabold px-6 py-3 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm">
+              <i class="fa-solid fa-check-double"></i> Uji Bukti Titik Tengah (+40 Poin)
+            </button>
+            <div id="feedbackM1" class="text-xs sm:text-sm font-semibold flex items-center gap-2 hidden"></div>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             MISSION 2: DETEKTIF FREKUENSI (f_i * x_i) & SUM
+             ============================================== -->
+        <div id="viewMission2" class="space-y-4 hidden">
+          <div class="bg-sky-500/10 border border-sky-500/30 rounded-2xl p-4 flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-sky-500/20 text-sky-300 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-calculator text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm sm:text-base">Misi 2: Mengalikan Frekuensi dengan Titik Tengah (<span class="math-font">fᵢ · xᵢ</span>)</h3>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Hitung hasil kali perkalian bobot kelas <span class="math-font font-bold text-sky-300">fᵢ · xᵢ</span> untuk setiap baris, lalu hitung jumlah total frekuensi <span class="math-font text-sky-300">∑ fᵢ</span> dan jumlah total <span class="math-font text-sky-300">∑ (fᵢ · xᵢ)</span>.
+              </p>
+            </div>
+          </div>
+
+          <!-- Table Input M2 -->
+          <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950">
+            <table class="w-full text-center text-sm border-collapse">
+              <thead>
+                <tr class="bg-slate-800/80 text-slate-300 border-b border-slate-700 text-xs uppercase tracking-wider font-bold">
+                  <th class="py-3 px-3 w-12">No</th>
+                  <th class="py-3 px-4">Interval</th>
+                  <th class="py-3 px-4 text-sky-400">Frekuensi (<span class="math-font">fᵢ</span>)</th>
+                  <th class="py-3 px-4 text-amber-300">Titik Tengah (<span class="math-font">xᵢ</span>)</th>
+                  <th class="py-3 px-4 bg-sky-500/10 text-sky-300">Hasil Kali (<span class="math-font">fᵢ · xᵢ</span>)</th>
+                  <th class="py-3 px-3 w-28">Status</th>
+                </tr>
+              </thead>
+              <tbody id="tableBodyM2" class="divide-y divide-slate-800 font-mono">
+                <!-- Injected via JavaScript -->
+              </tbody>
+              <tfoot class="bg-slate-900 border-t-2 border-slate-700 font-mono font-bold">
+                <tr>
+                  <td colspan="2" class="py-3 px-4 text-right uppercase text-xs text-slate-400">Total Sigma (∑):</td>
+                  <td class="py-3 px-4">
+                    <input type="number" id="inputSumF" placeholder="∑ fᵢ" class="w-24 text-center bg-slate-800 border border-sky-500/50 rounded-lg px-2 py-1 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm">
+                  </td>
+                  <td class="py-3 px-4 text-slate-500">&minus;</td>
+                  <td class="py-3 px-4">
+                    <input type="number" id="inputSumFixi" placeholder="∑ (fᵢ·xᵢ)" class="w-32 text-center bg-slate-800 border border-sky-500/50 rounded-lg px-2 py-1 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm">
+                  </td>
+                  <td class="py-3 px-3" id="statusSumRow">
+                    <span class="text-xs text-slate-500 font-sans">Belum diuji</span>
+                  </td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+
+          <div class="flex flex-wrap items-center justify-between gap-3 pt-2">
+            <button onclick="checkMission2()" class="bg-gradient-to-r from-sky-500 to-blue-500 hover:from-sky-400 hover:to-blue-400 text-white font-display font-extrabold px-6 py-3 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm">
+              <i class="fa-solid fa-calculator"></i> Verifikasi Hasil Perkalian (+40 Poin)
+            </button>
+            <div id="feedbackM2" class="text-xs sm:text-sm font-semibold flex items-center gap-2 hidden"></div>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             MISSION 3: MENENTUKAN MEAN (x_bar)
+             ============================================== -->
+        <div id="viewMission3" class="space-y-4 hidden">
+          <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl p-4 flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-emerald-500/20 text-emerald-300 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-scale-balanced text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm sm:text-base">Misi 3: Menghitung Titik Keseimbangan (Nilai Mean <span class="math-font">x̄</span>)</h3>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Gunakan rumus: <span class="math-font font-bold text-emerald-300 text-base">x̄ = ∑ (fᵢ · xᵢ) / ∑ fᵢ</span>. Masukkan hasil pembagian dalam ketelitian 2 angka desimal (atau pembulatan terdekat).
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <!-- Ringkasan Nilai -->
+            <div class="bg-slate-950 p-4 rounded-2xl border border-slate-800 space-y-3">
+              <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block">Data dari Misi 2</span>
+              <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                <span class="text-xs text-slate-300">Total Frekuensi (<span class="math-font">∑ fᵢ</span>):</span>
+                <span id="dispSumF" class="font-mono font-bold text-sky-400 text-base">?</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-800">
+                <span class="text-xs text-slate-300">Total Perkalian (<span class="math-font">∑ fᵢ·xᵢ</span>):</span>
+                <span id="dispSumFixi" class="font-mono font-bold text-amber-400 text-base">?</span>
+              </div>
+              <div class="text-[11px] text-slate-400 italic">
+                * Pastikan menyelesaikan Misi 2 terlebih dahulu atau gunakan data yang terverifikasi.
+              </div>
+            </div>
+
+            <!-- Input Jawaban Mean -->
+            <div class="md:col-span-2 bg-slate-950 p-5 rounded-2xl border border-slate-800 flex flex-col justify-between">
+              <div>
+                <label class="block text-xs font-bold text-slate-300 uppercase tracking-wider mb-2">
+                  Masukkan Nilai Mean (<span class="math-font">x̄</span>):
+                </label>
+                <div class="flex items-center gap-3">
+                  <div class="relative flex-1">
+                    <span class="absolute left-4 top-1/2 -translate-y-1/2 font-display font-bold text-slate-400 text-lg">x̄ =</span>
+                    <input type="number" step="0.01" id="inputMeanValue" placeholder="Contoh: 73.20" class="w-full pl-14 pr-4 py-3 bg-slate-900 border-2 border-emerald-500/40 rounded-xl text-white font-mono text-xl font-bold focus:outline-none focus:border-emerald-400">
+                  </div>
+                  <button onclick="checkMission3()" class="bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-slate-950 font-display font-extrabold px-6 py-3.5 rounded-xl shadow-lg transition-all flex items-center gap-2 text-sm shrink-0">
+                    <i class="fa-solid fa-lock-open"></i> Buka Kunci Mean (+50 Poin)
+                  </button>
+                </div>
+              </div>
+              
+              <!-- Result / Feedback Container -->
+              <div id="feedbackM3" class="mt-4 text-xs sm:text-sm font-semibold flex items-center gap-2 hidden"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==============================================
+             MISSION 4: ARSITEK DIAGRAM (HISTOGRAM & OGIVE)
+             ============================================== -->
+        <div id="viewMission4" class="space-y-4 hidden">
+          <div class="bg-purple-500/10 border border-purple-500/30 rounded-2xl p-4 flex items-start gap-3">
+            <div class="w-9 h-9 rounded-xl bg-purple-500/20 text-purple-300 flex items-center justify-center shrink-0">
+              <i class="fa-solid fa-chart-column text-lg"></i>
+            </div>
+            <div>
+              <h3 class="font-bold text-white text-sm sm:text-base">Misi 4: Arsitek Diagram (Histogram & Ogive Frekuensi Kumulatif)</h3>
+              <p class="text-xs text-slate-300 mt-0.5">
+                Lengkapi nilai <strong>Tepi Bawah (TB)</strong>, <strong>Tepi Atas (TA)</strong>, serta <strong>Frekuensi Kumulatif Kurang Dari Sama Dengan (<span class="math-font">Fk ≤</span>)</strong> untuk memunculkan grafik visualisasi data secara lengkap!
+              </p>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+            <!-- Table Input Tepi & Ogive (5 Cols) -->
+            <div class="lg:col-span-5 space-y-3">
+              <div class="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-950">
+                <table class="w-full text-center text-xs border-collapse font-mono">
+                  <thead>
+                    <tr class="bg-slate-800/80 text-slate-300 border-b border-slate-700 font-bold">
+                      <th class="py-2.5 px-2">Kelas</th>
+                      <th class="py-2.5 px-2">TB (-0.5)</th>
+                      <th class="py-2.5 px-2">TA (+0.5)</th>
+                      <th class="py-2.5 px-2 bg-purple-500/10 text-purple-300 font-bold">Fk (&le;)</th>
+                      <th class="py-2.5 px-2 w-12">Cek</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tableBodyM4" class="divide-y divide-slate-800">
+                    <!-- Injected via JavaScript -->
+                  </tbody>
+                </table>
+              </div>
+              <button onclick="checkMission4()" class="w-full bg-gradient-to-r from-purple-500 to-indigo-500 hover:from-purple-400 hover:to-indigo-400 text-white font-display font-extrabold py-3 rounded-xl shadow-lg transition-all flex items-center justify-center gap-2 text-sm">
+                <i class="fa-solid fa-wand-magic-sparkles"></i> Render Diagram Histogram & Ogive (+70 Poin)
+              </button>
+              <div id="feedbackM4" class="text-xs font-semibold p-2.5 rounded-xl hidden"></div>
+            </div>
+
+            <!-- Interactive Live Chart Canvas (7 Cols) -->
+            <div class="lg:col-span-7 bg-slate-950 border border-slate-800 rounded-2xl p-4 flex flex-col justify-between">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-xs font-bold text-slate-300 flex items-center gap-2">
+                  <i class="fa-solid fa-chart-area text-purple-400"></i> Visualisasi Hasil Penyelidikan
+                </span>
+                <div class="flex gap-1.5">
+                  <button onclick="toggleChartMode('hist')" id="btnChartHist" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-600 text-white transition-all">
+                    Histogram
+                  </button>
+                  <button onclick="toggleChartMode('ogive')" id="btnChartOgive" class="text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-all">
+                    Ogive (&le;)
+                  </button>
+                </div>
+              </div>
+
+              <!-- Canvas Container -->
+              <div class="relative w-full h-[280px]">
+                <canvas id="interactiveGameChart"></canvas>
+              </div>
+
+              <div id="chartMeanNote" class="mt-2 text-[11px] text-slate-400 flex items-center justify-between border-t border-slate-800/80 pt-2">
+                <span>Garis Penanda Titik Keseimbangan: <strong class="text-amber-400 font-mono">Mean = <span id="chartMeanVal">0</span></strong></span>
+                <span class="text-emerald-400 font-bold"><i class="fa-solid fa-circle-check"></i> Bukti Kasus Lengkap</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==============================================
+       MODAL 1: PAPAN TULIS / SCRATCHPAD CANVAS (PROYECTOR)
+       ============================================== -->
+  <div id="scratchpadModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-3 sm:p-6 no-select">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-5xl h-[88vh] rounded-3xl flex flex-col shadow-2xl overflow-hidden">
+      <!-- Toolbar -->
+      <div class="bg-slate-800/90 px-4 py-3 border-b border-slate-700 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex items-center gap-2">
+          <div class="w-8 h-8 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center">
+            <i class="fa-solid fa-chalkboard"></i>
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white">Papan Coret-Coret Guru & Siswa</h3>
+            <p class="text-[10px] text-slate-400">Gunakan proyektor touchscreen, mouse, atau stylus untuk corat-coret rumus di depan kelas</p>
+          </div>
+        </div>
+
+        <!-- Tool Controls -->
+        <div class="flex items-center gap-2 flex-wrap">
+          <!-- Colors -->
+          <div class="flex items-center gap-1.5 bg-slate-950 px-2 py-1 rounded-xl border border-slate-700">
+            <button onclick="setScratchColor('#f8fafc')" class="w-5 h-5 rounded-full bg-slate-100 hover:scale-110 transition-transform border border-slate-300"></button>
+            <button onclick="setScratchColor('#facc15')" class="w-5 h-5 rounded-full bg-yellow-400 hover:scale-110 transition-transform"></button>
+            <button onclick="setScratchColor('#38bdf8')" class="w-5 h-5 rounded-full bg-sky-400 hover:scale-110 transition-transform"></button>
+            <button onclick="setScratchColor('#4ade80')" class="w-5 h-5 rounded-full bg-emerald-400 hover:scale-110 transition-transform"></button>
+            <button onclick="setScratchColor('#f43f5e')" class="w-5 h-5 rounded-full bg-rose-500 hover:scale-110 transition-transform"></button>
+          </div>
+
+          <!-- Brush Size -->
+          <div class="flex items-center gap-1.5 bg-slate-950 px-2.5 py-1 rounded-xl border border-slate-700 text-xs">
+            <span class="text-slate-400 text-[10px]">Tebal:</span>
+            <input type="range" id="brushSize" min="2" max="14" value="4" oninput="changeBrushSize(this.value)" class="w-16 accent-sky-400">
+          </div>
+
+          <!-- Clear -->
+          <button onclick="clearScratchpad()" class="bg-rose-500/20 hover:bg-rose-500/30 text-rose-300 text-xs font-bold px-3 py-1.5 rounded-xl border border-rose-500/30 flex items-center gap-1 transition-all">
+            <i class="fa-solid fa-eraser"></i> Bersihkan
+          </button>
+
+          <!-- Close Modal -->
+          <button onclick="closeScratchpad()" class="bg-slate-700 hover:bg-slate-600 text-white text-xs font-bold px-3 py-1.5 rounded-xl flex items-center gap-1 transition-all">
+            <i class="fa-solid fa-xmark"></i> Tutup
+          </button>
+        </div>
+      </div>
+
+      <!-- Scratch Canvas Area -->
+      <div class="flex-grow relative bg-slate-950 cursor-crosshair overflow-hidden" id="canvasContainer">
+        <canvas id="scratchCanvas" class="w-full h-full block"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       MODAL 2: KUNCI PEMBAHASAN GURU (TEACHER KEY)
+       ============================================== -->
+  <div id="teacherModal" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <div class="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div class="flex items-center gap-2">
+          <div class="w-9 h-9 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center">
+            <i class="fa-solid fa-key text-lg"></i>
+          </div>
+          <div>
+            <h3 class="font-display font-bold text-white text-base">Kunci Jawaban & Pembahasan Guru</h3>
+            <p class="text-xs text-slate-400">Gunakan untuk membimbing siswa saat mengalami kesulitan</p>
+          </div>
+        </div>
+        <button onclick="toggleTeacherGuide()" class="text-slate-400 hover:text-white p-2 rounded-lg">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+
+      <div id="teacherContent" class="space-y-3 text-xs sm:text-sm text-slate-300 font-mono">
+        <!-- Injected via JavaScript -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==============================================
+       AUDIO SYNTHESIZER (WEB AUDIO API)
+       ============================================== -->
+  <script>
+    // Web Audio Sound Engine (Tanpa file eksternal)
+    let audioCtx = null;
+
+    function initAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    function playSound(type) {
+      try {
+        initAudio();
+        if (!audioCtx) return;
+
+        const now = audioCtx.currentTime;
+
+        if (type === 'click') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(450, now);
+          osc.frequency.exponentialRampToValueAtTime(300, now + 0.05);
+          gain.gain.setValueAtTime(0.15, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.05);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.05);
+        } else if (type === 'correct') {
+          // Double ding (Major Third)
+          [523.25, 659.25].forEach((freq, i) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'triangle';
+            osc.frequency.setValueAtTime(freq, now + i * 0.1);
+            gain.gain.setValueAtTime(0.2, now + i * 0.1);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + i * 0.1 + 0.3);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + i * 0.1);
+            osc.stop(now + i * 0.1 + 0.3);
+          });
+        } else if (type === 'wrong') {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          osc.type = 'sawtooth';
+          osc.frequency.setValueAtTime(180, now);
+          osc.frequency.linearRampToValueAtTime(110, now + 0.25);
+          gain.gain.setValueAtTime(0.25, now);
+          gain.gain.linearRampToValueAtTime(0.01, now + 0.25);
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(now);
+          osc.stop(now + 0.25);
+        } else if (type === 'victory') {
+          // Fanfare arpeggio: C4, E4, G4, C5
+          [261.63, 329.63, 392.00, 523.25].forEach((freq, idx) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now + idx * 0.12);
+            gain.gain.setValueAtTime(0.25, now + idx * 0.12);
+            gain.gain.exponentialRampToValueAtTime(0.001, now + idx * 0.12 + 0.4);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start(now + idx * 0.12);
+            osc.stop(now + idx * 0.12 + 0.4);
+          });
+        }
+      } catch (e) {
+        console.warn('Audio API error:', e);
+      }
+    }
+  </script>
+
+  <!-- ==============================================
+       MAIN APPLICATION JAVASCRIPT
+       ============================================== -->
+  <script>
+    // --- STATE MANAGEMENT ---
+    const TEAMS = [
+      { name: 'Kelompok 1 (Alfa)', color: 'amber', score: 0, completedMissions: new Set() },
+      { name: 'Kelompok 2 (Beta)', color: 'sky', score: 0, completedMissions: new Set() },
+      { name: 'Kelompok 3 (Gamma)', color: 'emerald', score: 0, completedMissions: new Set() },
+      { name: 'Kelompok 4 (Delta)', color: 'purple', score: 0, completedMissions: new Set() }
+    ];
+    let activeTeamIndex = 0;
+    let currentMission = 1;
+
+    // Timer State
+    let timerSeconds = 120; // 2 Menit per putaran
+    let timerInterval = null;
+    let isTimerRunning = false;
+
+    // Current Case Data
+    let currentCase = null;
+    let chartInstance = null;
+    let activeChartMode = 'hist'; // 'hist' or 'ogive'
+
+    // Preset Bank Soal Bersahabat untuk Matematika SMA
+    const CASE_PRESETS = [
+      {
+        id: 'DS-101',
+        title: 'Misteri Hasil Ujian Penilaian Harian Matematika',
+        category: 'Nilai Ujian 40 Siswa (Skala 50-100)',
+        classes: [
+          { bb: 51, ba: 60, f: 5 },
+          { bb: 61, ba: 70, f: 9 },
+          { bb: 71, ba: 80, f: 14 },
+          { bb: 81, ba: 90, f: 8 },
+          { bb: 91, ba: 100, f: 4 }
+        ]
+      },
+      {
+        id: 'DS-102',
+        title: 'Penyelidikan Bobot Paket Laboratorium Sains',
+        category: 'Berat Benda 50 Sampel (kg)',
+        classes: [
+          { bb: 31, ba: 40, f: 4 },
+          { bb: 41, ba: 50, f: 11 },
+          { bb: 51, ba: 60, f: 18 },
+          { bb: 61, ba: 70, f: 12 },
+          { bb: 71, ba: 80, f: 5 }
+        ]
+      },
+      {
+        id: 'DS-103',
+        title: 'Catatan Waktu Latihan Lari Sprint Atletik',
+        category: 'Durasi Waktu 40 Pelari (Detik)',
+        classes: [
+          { bb: 10, ba: 14, f: 6 },
+          { bb: 15, ba: 19, f: 10 },
+          { bb: 20, ba: 24, f: 15 },
+          { bb: 25, ba: 29, f: 6 },
+          { bb: 30, ba: 34, f: 3 }
+        ]
+      }
+    ];
+
+    // --- INISIALISASI GAME ---
+    window.addEventListener('DOMContentLoaded', () => {
+      generateNewCase(0);
+      initChart();
+      initScratchpad();
+      startTimer();
+    });
+
+    // Generate or Pick Case
+    function generateNewCase(presetIndex = null) {
+      playSound('click');
+      let preset;
+      if (presetIndex !== null && CASE_PRESETS[presetIndex]) {
+        preset = CASE_PRESETS[presetIndex];
+      } else {
+        const rand = Math.floor(Math.random() * CASE_PRESETS.length);
+        preset = CASE_PRESETS[rand];
+      }
+
+      // Hitung parameter analitis
+      let sumF = 0;
+      let sumFixi = 0;
+      let cumF = 0;
+
+      const preparedRows = preset.classes.map((cls, idx) => {
+        const xi = (cls.bb + cls.ba) / 2;
+        const fixi = cls.f * xi;
+        const tb = cls.bb - 0.5;
+        const ta = cls.ba + 0.5;
+        sumF += cls.f;
+        sumFixi += fixi;
+        cumF += cls.f;
+
+        return {
+          ...cls,
+          xi,
+          fixi,
+          tb,
+          ta,
+          cumF
+        };
+      });
+
+      const mean = parseFloat((sumFixi / sumF).toFixed(2));
+
+      currentCase = {
+        id: preset.id + '-' + Math.floor(10 + Math.random() * 89),
+        title: preset.title,
+        category: preset.category,
+        rows: preparedRows,
+        sumF,
+        sumFixi,
+        mean
+      };
+
+      // Tampilkan info kasus
+      document.getElementById('caseCode').textContent = currentCase.id;
+      document.getElementById('caseTitle').textContent = currentCase.title;
+      document.getElementById('caseCategory').textContent = currentCase.category;
+
+      // Render Tables
+      renderMission1();
+      renderMission2();
+      renderMission3();
+      renderMission4();
+      updateTeacherGuide();
+      goToMission(1);
+    }
+
+    // --- MANAJEMEN TIM & SKOR ---
+    function selectTurnTeam(teamIdx) {
+      playSound('click');
+      activeTeamIndex = teamIdx;
+      for (let i = 0; i < 4; i++) {
+        const card = document.getElementById(`cardTeam${i}`);
+        if (i === activeTeamIndex) {
+          card.classList.add('border-amber-400', 'active-team-glow');
+          card.classList.remove('border-slate-800');
+        } else {
+          card.classList.remove('border-amber-400', 'active-team-glow');
+          card.classList.add('border-slate-800');
+        }
+      }
+      document.getElementById('activeTeamBadge').textContent = TEAMS[activeTeamIndex].name;
+      resetTimer();
+    }
+
+    function addScoreToCurrentTeam(points, missionNum) {
+      const team = TEAMS[activeTeamIndex];
+      team.score += points;
+      team.completedMissions.add(missionNum);
+      document.getElementById(`scoreTeam${activeTeamIndex}`).textContent = team.score;
+      document.getElementById(`misiTeam${activeTeamIndex}`).textContent = `${team.completedMissions.size}/4`;
+    }
+
+    // --- TIMER SYSTEM ---
+    function formatTime(s) {
+      const min = Math.floor(s / 60);
+      const sec = s % 60;
+      return `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+    }
+
+    function updateTimerDisplay() {
+      document.getElementById('timerDisplay').textContent = formatTime(timerSeconds);
+    }
+
+    function startTimer() {
+      if (timerInterval) clearInterval(timerInterval);
+      isTimerRunning = true;
+      document.getElementById('btnPlayPauseTimer').innerHTML = '<i class="fa-solid fa-pause"></i>';
+      timerInterval = setInterval(() => {
+        if (timerSeconds > 0) {
+          timerSeconds--;
+          updateTimerDisplay();
+        } else {
+          clearInterval(timerInterval);
+          isTimerRunning = false;
+          playSound('wrong');
+          document.getElementById('btnPlayPauseTimer').innerHTML = '<i class="fa-solid fa-play"></i>';
+        }
+      }, 1000);
+    }
+
+    function toggleTimer() {
+      playSound('click');
+      if (isTimerRunning) {
+        clearInterval(timerInterval);
+        isTimerRunning = false;
+        document.getElementById('btnPlayPauseTimer').innerHTML = '<i class="fa-solid fa-play"></i>';
+      } else {
+        startTimer();
+      }
+    }
+
+    function resetTimer() {
+      playSound('click');
+      timerSeconds = 120;
+      updateTimerDisplay();
+      startTimer();
+    }
+
+    // --- NAVIGATION TABS ---
+    function goToMission(mNum) {
+      playSound('click');
+      currentMission = mNum;
+
+      for (let i = 1; i <= 4; i++) {
+        const tab = document.getElementById(`tabMission${i}`);
+        const view = document.getElementById(`viewMission${i}`);
+        if (i === mNum) {
+          tab.className = 'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all bg-amber-500 text-slate-950 shadow-md';
+          view.classList.remove('hidden');
+        } else {
+          tab.className = 'px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all text-slate-400 hover:text-white';
+          view.classList.add('hidden');
+        }
+      }
+
+      if (mNum === 4 && chartInstance) {
+        setTimeout(() => updateChartData(), 100);
+      }
+    }
+
+    // --- RENDER & LOGIKA LEVEL 1: TITIK TENGAH (x_i) ---
+    function renderMission1() {
+      const tbody = document.getElementById('tableBodyM1');
+      tbody.innerHTML = '';
+
+      currentCase.rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition-colors';
+        tr.innerHTML = `
+          <td class="py-3 px-4 text-slate-400 font-bold">${i + 1}</td>
+          <td class="py-3 px-4 font-bold text-white text-base">${row.bb} &minus; ${row.ba}</td>
+          <td class="py-3 px-4 text-slate-300">${row.bb}</td>
+          <td class="py-3 px-4 text-slate-300">${row.ba}</td>
+          <td class="py-3 px-4 font-bold text-sky-400">${row.f}</td>
+          <td class="py-3 px-4 bg-amber-500/5">
+            <input type="number" step="0.5" id="inputM1_${i}" placeholder="Nilai x_${i+1}" class="w-28 text-center bg-slate-900 border border-amber-500/50 rounded-lg px-2.5 py-1.5 text-amber-300 font-bold focus:outline-none focus:ring-2 focus:ring-amber-400 text-sm">
+          </td>
+          <td class="py-3 px-4" id="statusM1_${i}">
+            <span class="text-xs text-slate-500 font-sans">Belum diuji</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function checkMission1() {
+      let allCorrect = true;
+      currentCase.rows.forEach((row, i) => {
+        const input = document.getElementById(`inputM1_${i}`);
+        const status = document.getElementById(`statusM1_${i}`);
+        const val = parseFloat(input.value);
+
+        if (val === row.xi) {
+          status.innerHTML = '<span class="text-xs text-emerald-400 font-sans font-bold"><i class="fa-solid fa-check"></i> Tepat</span>';
+          input.classList.remove('border-rose-500');
+          input.classList.add('border-emerald-500', 'bg-emerald-950/20');
+        } else {
+          allCorrect = false;
+          status.innerHTML = '<span class="text-xs text-rose-400 font-sans font-bold"><i class="fa-solid fa-xmark"></i> Keliru</span>';
+          input.classList.add('border-rose-500');
+        }
+      });
+
+      const feedback = document.getElementById('feedbackM1');
+      feedback.classList.remove('hidden');
+
+      if (allCorrect) {
+        playSound('correct');
+        addScoreToCurrentTeam(40, 1);
+        feedback.className = 'text-xs sm:text-sm font-semibold flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-xl';
+        feedback.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i> Hebat! Seluruh Titik Tengah Terverifikasi (+40 Poin untuk ${TEAMS[activeTeamIndex].name}). Lanjut ke Misi 2!`;
+        setTimeout(() => goToMission(2), 1200);
+      } else {
+        playSound('wrong');
+        feedback.className = 'text-xs sm:text-sm font-semibold flex items-center gap-2 text-rose-400 bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 rounded-xl';
+        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-base"></i> Masih ada titik tengah yang belum tepat. Ingat rumus: (BB + BA) / 2`;
+      }
+    }
+
+    // --- RENDER & LOGIKA LEVEL 2: f_i * x_i & SUM ---
+    function renderMission2() {
+      const tbody = document.getElementById('tableBodyM2');
+      tbody.innerHTML = '';
+
+      currentCase.rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition-colors';
+        tr.innerHTML = `
+          <td class="py-2.5 px-3 text-slate-400">${i + 1}</td>
+          <td class="py-2.5 px-4 font-bold text-white">${row.bb} &minus; ${row.ba}</td>
+          <td class="py-2.5 px-4 font-bold text-sky-400">${row.f}</td>
+          <td class="py-2.5 px-4 font-mono text-amber-300 font-bold">${row.xi}</td>
+          <td class="py-2.5 px-4 bg-sky-500/5">
+            <input type="number" step="0.5" id="inputM2_${i}" placeholder="f_${i+1} · x_${i+1}" class="w-32 text-center bg-slate-900 border border-sky-500/50 rounded-lg px-2 py-1 text-sky-300 font-bold focus:outline-none focus:ring-2 focus:ring-sky-400 text-sm">
+          </td>
+          <td class="py-2.5 px-3" id="statusM2_${i}">
+            <span class="text-xs text-slate-500 font-sans">Belum diuji</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+      document.getElementById('inputSumF').value = '';
+      document.getElementById('inputSumFixi').value = '';
+    }
+
+    function checkMission2() {
+      let rowsCorrect = true;
+      currentCase.rows.forEach((row, i) => {
+        const input = document.getElementById(`inputM2_${i}`);
+        const status = document.getElementById(`statusM2_${i}`);
+        const val = parseFloat(input.value);
+
+        if (val === row.fixi) {
+          status.innerHTML = '<span class="text-xs text-emerald-400 font-sans font-bold"><i class="fa-solid fa-check"></i></span>';
+          input.classList.remove('border-rose-500');
+          input.classList.add('border-emerald-500', 'bg-emerald-950/20');
+        } else {
+          rowsCorrect = false;
+          status.innerHTML = '<span class="text-xs text-rose-400 font-sans font-bold"><i class="fa-solid fa-xmark"></i></span>';
+          input.classList.add('border-rose-500');
+        }
+      });
+
+      const userSumF = parseFloat(document.getElementById('inputSumF').value);
+      const userSumFixi = parseFloat(document.getElementById('inputSumFixi').value);
+      const statusSum = document.getElementById('statusSumRow');
+
+      const sumFValid = (userSumF === currentCase.sumF);
+      const sumFixiValid = (userSumFixi === currentCase.sumFixi);
+
+      if (sumFValid && sumFixiValid) {
+        statusSum.innerHTML = '<span class="text-xs text-emerald-400 font-sans font-bold"><i class="fa-solid fa-check-double"></i> Tepat</span>';
+      } else {
+        statusSum.innerHTML = '<span class="text-xs text-rose-400 font-sans font-bold"><i class="fa-solid fa-xmark"></i> Cek ∑</span>';
+      }
+
+      const feedback = document.getElementById('feedbackM2');
+      feedback.classList.remove('hidden');
+
+      if (rowsCorrect && sumFValid && sumFixiValid) {
+        playSound('correct');
+        addScoreToCurrentTeam(40, 2);
+        feedback.className = 'text-xs sm:text-sm font-semibold flex items-center gap-2 text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-4 py-2.5 rounded-xl';
+        feedback.innerHTML = `<i class="fa-solid fa-circle-check text-base"></i> Sempurna! Seluruh perkalian dan jumlahan sigma tepat (+40 Poin untuk ${TEAMS[activeTeamIndex].name}). Lanjut ke Misi 3!`;
+        
+        // Auto update data to Mission 3
+        document.getElementById('dispSumF').textContent = currentCase.sumF;
+        document.getElementById('dispSumFixi').textContent = currentCase.sumFixi;
+        setTimeout(() => goToMission(3), 1200);
+      } else {
+        playSound('wrong');
+        feedback.className = 'text-xs sm:text-sm font-semibold flex items-center gap-2 text-rose-400 bg-rose-500/10 border border-rose-500/30 px-4 py-2.5 rounded-xl';
+        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-base"></i> Ada perkalian atau total sigma yang belum cocok. Periksa kembali penjumlahan seluruh kelas!`;
+      }
+    }
+
+    // --- RENDER & LOGIKA LEVEL 3: MEAN (x_bar) ---
+    function renderMission3() {
+      document.getElementById('inputMeanValue').value = '';
+      document.getElementById('dispSumF').textContent = currentCase.sumF;
+      document.getElementById('dispSumFixi').textContent = currentCase.sumFixi;
+      document.getElementById('feedbackM3').classList.add('hidden');
+    }
+
+    function checkMission3() {
+      const input = document.getElementById('inputMeanValue');
+      const feedback = document.getElementById('feedbackM3');
+      const userMean = parseFloat(input.value);
+
+      feedback.classList.remove('hidden');
+
+      // Toleransi pembulatan +- 0.05
+      if (Math.abs(userMean - currentCase.mean) <= 0.05) {
+        playSound('victory');
+        addScoreToCurrentTeam(50, 3);
+        feedback.className = 'p-3 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        feedback.innerHTML = `<i class="fa-solid fa-trophy text-lg text-amber-400"></i> Nilai Mean Ditemukan: <strong>x̄ = ${currentCase.mean}</strong>! Jawaban Tim Sangat Akurat (+50 Poin).`;
+        setTimeout(() => goToMission(4), 1400);
+      } else {
+        playSound('wrong');
+        feedback.className = 'p-3 rounded-xl text-xs sm:text-sm font-semibold flex items-center gap-2 bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        feedback.innerHTML = `<i class="fa-solid fa-circle-xmark text-lg"></i> Nilai mean belum tepat. Coba bagikan: <strong>${currentCase.sumFixi} &divide; ${currentCase.sumF}</strong>`;
+      }
+    }
+
+    // --- RENDER & LOGIKA LEVEL 4: ARSITEK DIAGRAM (HISTOGRAM & OGIVE) ---
+    function renderMission4() {
+      const tbody = document.getElementById('tableBodyM4');
+      tbody.innerHTML = '';
+
+      currentCase.rows.forEach((row, i) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-900/60 transition-colors';
+        tr.innerHTML = `
+          <td class="py-2 px-2 text-white font-bold">${row.bb}-${row.ba}</td>
+          <td class="py-2 px-1">
+            <input type="number" step="0.5" id="inputTB_${i}" placeholder="TB" class="w-16 text-center bg-slate-900 border border-slate-700 rounded px-1 py-1 text-slate-200 font-mono text-xs focus:ring-1 focus:ring-purple-400">
+          </td>
+          <td class="py-2 px-1">
+            <input type="number" step="0.5" id="inputTA_${i}" placeholder="TA" class="w-16 text-center bg-slate-900 border border-slate-700 rounded px-1 py-1 text-slate-200 font-mono text-xs focus:ring-1 focus:ring-purple-400">
+          </td>
+          <td class="py-2 px-1 bg-purple-500/5">
+            <input type="number" id="inputCumF_${i}" placeholder="Fk" class="w-16 text-center bg-slate-900 border border-purple-500/40 rounded px-1 py-1 text-purple-300 font-mono text-xs font-bold focus:ring-1 focus:ring-purple-400">
+          </td>
+          <td class="py-2 px-1 text-center" id="statusM4_${i}">
+            <span class="text-slate-600">&bull;</span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('chartMeanVal').textContent = currentCase.mean;
+      updateChartData();
+    }
+
+    function checkMission4() {
+      let allValid = true;
+      currentCase.rows.forEach((row, i) => {
+        const tbInput = document.getElementById(`inputTB_${i}`);
+        const taInput = document.getElementById(`inputTA_${i}`);
+        const cfInput = document.getElementById(`inputCumF_${i}`);
+        const status = document.getElementById(`statusM4_${i}`);
+
+        const tbVal = parseFloat(tbInput.value);
+        const taVal = parseFloat(taInput.value);
+        const cfVal = parseInt(cfInput.value);
+
+        if (tbVal === row.tb && taVal === row.ta && cfVal === row.cumF) {
+          status.innerHTML = '<span class="text-emerald-400 font-bold"><i class="fa-solid fa-check"></i></span>';
+        } else {
+          allValid = false;
+          status.innerHTML = '<span class="text-rose-400 font-bold"><i class="fa-solid fa-xmark"></i></span>';
+        }
+      });
+
+      const feedback = document.getElementById('feedbackM4');
+      feedback.classList.remove('hidden');
+
+      if (allValid) {
+        playSound('victory');
+        addScoreToCurrentTeam(70, 4);
+        feedback.className = 'text-xs font-semibold p-2.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/30';
+        feedback.innerHTML = `<i class="fa-solid fa-award text-amber-400 text-sm"></i> <strong>Penyelidikan Selesai!</strong> Kasus ${currentCase.id} terpecahkan secara tuntas (+70 Poin untuk ${TEAMS[activeTeamIndex].name})!`;
+        updateChartData(true);
+      } else {
+        playSound('wrong');
+        feedback.className = 'text-xs font-semibold p-2.5 rounded-xl bg-rose-500/20 text-rose-300 border border-rose-500/30';
+        feedback.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Ada tepi atau frekuensi kumulatif yang belum sesuai. TB = BB - 0.5, TA = BA + 0.5.`;
+      }
+    }
+
+    // --- CHART.JS CONFIGURATION ---
+    function initChart() {
+      const ctx = document.getElementById('interactiveGameChart').getContext('2d');
+      chartInstance = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: [],
+          datasets: []
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              labels: {
+                color: '#cbd5e1',
+                font: { family: 'Inter', size: 11, weight: 'bold' }
+              }
+            },
+            tooltip: {
+              backgroundColor: '#0f172a',
+              titleColor: '#f59e0b',
+              bodyFont: { family: 'Fira Code' }
+            }
+          },
+          scales: {
+            x: {
+              ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } },
+              grid: { display: false }
+            },
+            y: {
+              beginAtZero: true,
+              ticks: { color: '#94a3b8', font: { family: 'Inter', size: 10 } },
+              grid: { color: '#334155' }
+            }
+          }
+        }
+      });
+    }
+
+    function toggleChartMode(mode) {
+      playSound('click');
+      activeChartMode = mode;
+      const btnHist = document.getElementById('btnChartHist');
+      const btnOgive = document.getElementById('btnChartOgive');
+
+      if (mode === 'hist') {
+        btnHist.className = 'text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-600 text-white transition-all';
+        btnOgive.className = 'text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-all';
+      } else {
+        btnOgive.className = 'text-[11px] font-bold px-2.5 py-1 rounded-lg bg-purple-600 text-white transition-all';
+        btnHist.className = 'text-[11px] font-bold px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300 hover:text-white transition-all';
+      }
+      updateChartData();
+    }
+
+    function updateChartData(fullUnlock = false) {
+      if (!chartInstance || !currentCase) return;
+
+      if (activeChartMode === 'hist') {
+        const labels = currentCase.rows.map(r => `${r.tb}-${r.ta}`);
+        const freqs = currentCase.rows.map(r => r.f);
+
+        chartInstance.config.type = 'bar';
+        chartInstance.data = {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Histogram Frekuensi Kelas',
+              data: freqs,
+              backgroundColor: 'rgba(168, 85, 247, 0.7)',
+              borderColor: '#c084fc',
+              borderWidth: 2,
+              barPercentage: 1.0,
+              categoryPercentage: 1.0
+            },
+            {
+              type: 'line',
+              label: 'Poligon Frekuensi',
+              data: freqs,
+              borderColor: '#f59e0b',
+              backgroundColor: 'rgba(245, 158, 11, 0.2)',
+              tension: 0.3,
+              pointRadius: 5,
+              pointBackgroundColor: '#fbbf24'
+            }
+          ]
+        };
+      } else {
+        // Ogive Mode
+        const labels = [`≤ ${currentCase.rows[0].tb}`, ...currentCase.rows.map(r => `≤ ${r.ta}`)];
+        const ogiveData = [0, ...currentCase.rows.map(r => r.cumF)];
+
+        chartInstance.config.type = 'line';
+        chartInstance.data = {
+          labels: labels,
+          datasets: [{
+            label: 'Kurva Ogive Positif (Fk ≤)',
+            data: ogiveData,
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.2)',
+            fill: true,
+            tension: 0.35,
+            pointRadius: 6,
+            pointBackgroundColor: '#34d399'
+          }]
+        };
+      }
+      chartInstance.update();
+    }
+
+    // --- KUNCI JAWABAN & BANTUAN GURU ---
+    function toggleTeacherGuide() {
+      playSound('click');
+      const modal = document.getElementById('teacherModal');
+      modal.classList.toggle('hidden');
+    }
+
+    function updateTeacherGuide() {
+      const container = document.getElementById('teacherContent');
+      let html = `
+        <div class="p-3 bg-slate-950 rounded-xl border border-slate-800 space-y-1">
+          <div class="text-amber-400 font-bold">KODE KASUS: ${currentCase.id} - ${currentCase.title}</div>
+          <div class="text-slate-400">Total Frekuensi (∑ fᵢ): <span class="text-white font-bold">${currentCase.sumF}</span></div>
+          <div class="text-slate-400">Total Perkalian (∑ fᵢ·xᵢ): <span class="text-white font-bold">${currentCase.sumFixi}</span></div>
+          <div class="text-emerald-400 font-bold text-base">Mean (x̄) = ${currentCase.sumFixi} / ${currentCase.sumF} = ${currentCase.mean}</div>
+        </div>
+
+        <div class="font-bold text-xs text-slate-400 uppercase pt-2">Rincian Per Baris:</div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs border border-slate-800 rounded-lg">
+            <tr class="bg-slate-800 text-slate-300">
+              <th class="p-1.5">Interval</th>
+              <th class="p-1.5">fᵢ</th>
+              <th class="p-1.5">xᵢ</th>
+              <th class="p-1.5">fᵢ·xᵢ</th>
+              <th class="p-1.5">TB</th>
+              <th class="p-1.5">TA</th>
+              <th class="p-1.5">Fk(≤)</th>
+            </tr>
+      `;
+
+      currentCase.rows.forEach(r => {
+        html += `
+          <tr class="border-b border-slate-800">
+            <td class="p-1.5 text-white font-bold">${r.bb}-${r.ba}</td>
+            <td class="p-1.5 text-sky-400">${r.f}</td>
+            <td class="p-1.5 text-amber-300">${r.xi}</td>
+            <td class="p-1.5 text-slate-300">${r.fixi}</td>
+            <td class="p-1.5 text-slate-400">${r.tb}</td>
+            <td class="p-1.5 text-slate-400">${r.ta}</td>
+            <td class="p-1.5 text-purple-400 font-bold">${r.cumF}</td>
+          </tr>
+        `;
+      });
+
+      html += `</table></div>`;
+      container.innerHTML = html;
+    }
+
+    // --- PAPAN TULIS DIGITAL / SCRATCHPAD CANVAS ---
+    let sCanvas, sCtx;
+    let isDrawing = false;
+    let currentColor = '#facc15';
+    let currentLineWidth = 4;
+
+    function initScratchpad() {
+      sCanvas = document.getElementById('scratchCanvas');
+      sCtx = sCanvas.getContext('2d');
+
+      function resizeCanvas() {
+        const rect = sCanvas.getBoundingClientRect();
+        sCanvas.width = rect.width;
+        sCanvas.height = rect.height;
+      }
+
+      window.addEventListener('resize', () => {
+        if (!document.getElementById('scratchpadModal').classList.contains('hidden')) {
+          resizeCanvas();
+        }
+      });
+
+      // Mouse Events
+      sCanvas.addEventListener('mousedown', startDrawing);
+      sCanvas.addEventListener('mousemove', draw);
+      window.addEventListener('mouseup', stopDrawing);
+
+      // Touch Events (Touchscreen Proyektor / Tablet)
+      sCanvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        const touch = e.touches[0];
+        const rect = sCanvas.getBoundingClientRect();
+        isDrawing = true;
+        sCtx.beginPath();
+        sCtx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+      });
+
+      sCanvas.addEventListener('touchmove', (e) => {
+        e.preventDefault();
+        if (!isDrawing) return;
+        const touch = e.touches[0];
+        const rect = sCanvas.getBoundingClientRect();
+        sCtx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+        sCtx.strokeStyle = currentColor;
+        sCtx.lineWidth = currentLineWidth;
+        sCtx.lineCap = 'round';
+        sCtx.lineJoin = 'round';
+        sCtx.stroke();
+      });
+
+      sCanvas.addEventListener('touchend', stopDrawing);
+    }
+
+    function openScratchpad() {
+      playSound('click');
+      const modal = document.getElementById('scratchpadModal');
+      modal.classList.remove('hidden');
+      setTimeout(() => {
+        const rect = sCanvas.getBoundingClientRect();
+        sCanvas.width = rect.width;
+        sCanvas.height = rect.height;
+      }, 50);
+    }
+
+    function closeScratchpad() {
+      playSound('click');
+      document.getElementById('scratchpadModal').classList.add('hidden');
+    }
+
+    function setScratchColor(color) {
+      playSound('click');
+      currentColor = color;
+    }
+
+    function changeBrushSize(val) {
+      currentLineWidth = val;
+    }
+
+    function clearScratchpad() {
+      playSound('click');
+      sCtx.clearRect(0, 0, sCanvas.width, sCanvas.height);
+    }
+
+    function startDrawing(e) {
+      isDrawing = true;
+      const rect = sCanvas.getBoundingClientRect();
+      sCtx.beginPath();
+      sCtx.moveTo(e.clientX - rect.left, e.clientY - rect.top);
+    }
+
+    function draw(e) {
+      if (!isDrawing) return;
+      const rect = sCanvas.getBoundingClientRect();
+      sCtx.lineTo(e.clientX - rect.left, e.clientY - rect.top);
+      sCtx.strokeStyle = currentColor;
+      sCtx.lineWidth = currentLineWidth;
+      sCtx.lineCap = 'round';
+      sCtx.lineJoin = 'round';
+      sCtx.stroke();
+    }
+
+    function stopDrawing() {
+      if (isDrawing) {
+        sCtx.closePath();
+        isDrawing = false;
+      }
+    }
+  </script>
+</body>
+</html>
